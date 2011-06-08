@@ -169,6 +169,20 @@ module Shippinglogic
       attribute :just_validate,               :boolean,     :default => false
       attribute :rate_request_types,          :array,       :default => ["ACCOUNT"]
       
+      # customs options
+      attribute :payment_type                 :string,      :default => "SENDER"
+      attribute :document_content             :string,      :default => "NON_DOCUMENTS"
+      attribute :currency                     :string,      :default => "USD"
+      attribute :amount,                      :float        :default => "100.00" # Remove this default
+      attribute :number_of_pieces             :string,      :default => "1"
+      attribute :description                  :string,      :default => "Book"
+      attribute :country_of_manufacture       :string,      :default => "US"
+      attribute :units                        :string,      :default => "LB"
+      attribute :weight,                      :string       :default => "5" # Remove this default
+      attribute :quantity                     :string,      :default => "1"
+      attribute :quantity_units               :string,      :default => "EA"
+      attribute :export_compliance_statement  :string,      :default => "NO EEI 30.36"
+      
       private
         def target
           @target ||= parse_response(request(build_request))
@@ -212,6 +226,79 @@ module Shippinglogic
                 b.LabelStockType label_stock_type if label_stock_type
               end
               
+              # Per Proprietary_Developer_Guide.pdf from FedEx
+              # <q0:CustomsClearanceDetail>
+              # <q0:DutiesPayment>
+              # <q0:PaymentType>SENDER</q0:PaymentType>
+              # <q0:Payor>
+              # <q0:AccountNumber>123456789</q0:AccountNumber>
+              # <q0:CountryCode>US</q0:CountryCode>
+              # </q0:Payor>
+              # </q0:DutiesPayment>
+              # <q0:DocumentContent>NON_DOCUMENTS</q0:DocumentContent>
+              # <q0:CustomsValue>
+              # <q0:Currency>USD</q0:Currency>
+              # <q0:Amount>100.00</q0:Amount>
+              # </q0:CustomsValue>
+              # <q0:Commodities>
+              # <q0:NumberOfPieces>1</q0:NumberOfPieces>
+              # <q0:Description>Technical Book</q0:Description>
+              # <q0:CountryOfManufacture>US</q0:CountryOfManufacture>
+              # <q0:Weight>
+              # <q0:Units>LB</q0:Units>
+              # <q0:Value>5</q0:Value>
+              # </q0:Weight>
+              # <q0:Quantity>1</q0:Quantity>
+              # <q0:QuantityUnits>EA</q0:QuantityUnits>
+              # <q0:UnitPrice>
+              # <q0:Currency>USD</q0:Currency>
+              # <q0:Amount>100.00</q0:Amount>
+              # </q0:UnitPrice>
+              # <q0:CustomsValue>
+              # <q0:Currency>USD</q0:Currency>
+              # <q0:Amount>100.00</q0:Amount>
+              # </q0:CustomsValue>
+              # </q0:Commodities>
+              # <q0:ExportDetail>
+              # <q0:ExportComplianceStatement>NO EEI 30.36</q0:ExportComplianceStatement>
+              # </q0:ExportDetail>
+              # </q0:CustomsClearanceDetail>
+              b.CustomsClearanceDetail do
+                b.DutiesPayment do
+                  b.PaymentType payment_type if payment_type
+                  b.Payor do
+                    b.AccountNumber payor_account_number if payor_account_number
+                    b.CountryCode payor_country if payor_country
+                  end
+                end
+                b.DocumentContent document_content if document_content
+                b.CustomsValue do
+                  b.Currency currency if currency
+                  b.Amount amount if amount
+                end
+                b.Commodities do
+                  b.NumberOfPieces number_of_pieces if number_of_pieces
+                  b.Description description if description
+                  b.CountryOfManufacture country_of_manufacture if country_of_manufacture
+                  b.Weight do
+                    b.Units units if units
+                    b.Value weight if weight
+                  end
+                  b.Quantity quantity if quantity
+                  b.QuantityUnits quantity_units if quantity_units
+                  b.UnitPrice do
+                    b.Currency currency if currency
+                    b.Amount amount if amount
+                  end
+                  b.CustomsValue do
+                    b.Currency currency if currency
+                    b.Amount amount if amount
+                  end
+                end
+                b.ExportDetail do
+                  b.ExportComplianceStatement export_compliance_statement if export_compliance_statement
+                end
+              end            
               b.RateRequestTypes rate_request_types.join(",")
               build_package(b)
             end
