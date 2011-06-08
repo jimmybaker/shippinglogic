@@ -170,18 +170,18 @@ module Shippinglogic
       attribute :rate_request_types,          :array,       :default => ["ACCOUNT"]
       
       # customs options
-      attribute :payment_type                 :string,      :default => "SENDER"
-      attribute :document_content             :string,      :default => "NON_DOCUMENTS"
-      attribute :currency                     :string,      :default => "USD"
-      attribute :amount,                      :float        :default => "100.00" # Remove this default
-      attribute :number_of_pieces             :string,      :default => "1"
-      attribute :description                  :string,      :default => "Book"
-      attribute :country_of_manufacture       :string,      :default => "US"
-      attribute :units                        :string,      :default => "LB"
-      attribute :weight,                      :string       :default => "5" # Remove this default
-      attribute :quantity                     :string,      :default => "1"
-      attribute :quantity_units               :string,      :default => "EA"
-      attribute :export_compliance_statement  :string,      :default => "NO EEI 30.36"
+      attribute :payment_type,                :string,      :default => "SENDER"
+      attribute :document_content,            :string,      :default => "NON_DOCUMENTS"
+      attribute :currency,                    :string,      :default => "USD"
+      attribute :item_amount,                 :string,      :default => "100.00" # Remove this default
+      attribute :number_of_pieces,            :string,      :default => "1"
+      attribute :description,                 :string,      :default => "Book"
+      attribute :country_of_manufacture,      :string,      :default => "US"
+      attribute :units,                       :string,      :default => "LB"
+      attribute :weight,                      :string,      :default => "1.0" # Remove this default
+      attribute :quantity,                    :string,      :default => "1"
+      attribute :quantity_units,              :string,      :default => "EA"
+      attribute :export_compliance_statement, :string,      :default => "NO EEI 30.36"
       
       private
         def target
@@ -190,6 +190,9 @@ module Shippinglogic
         
         # Just building some XML to send off to FedEx using our various options
         def build_request
+          @log = Logger.new('/tmp/fedex.log')
+          @log.info "build_request service_type = #{service_type}"
+
           b = builder
           xml = b.tag!(just_validate ? "ValidateShipmentRequest" : "ProcessShipmentRequest", :xmlns => "http://fedex.com/ws/ship/v#{VERSION[:major]}") do
             build_authentication(b)
@@ -199,6 +202,7 @@ module Shippinglogic
               b.ShipTimestamp ship_time.xmlschema if ship_time
               b.DropoffType dropoff_type if dropoff_type
               b.ServiceType service_type if service_type
+              # b.ServiceType 'INTERNATIONAL_PRIORITY'
               b.PackagingType packaging_type if packaging_type
               build_insured_value(b)
               
@@ -218,12 +222,6 @@ module Shippinglogic
                   b.AccountNumber payor_account_number if payor_account_number
                   b.CountryCode payor_country if payor_country
                 end
-              end
-              
-              b.LabelSpecification do
-                b.LabelFormatType label_format if label_format
-                b.ImageType label_file_type if label_file_type
-                b.LabelStockType label_stock_type if label_stock_type
               end
               
               # Per Proprietary_Developer_Guide.pdf from FedEx
@@ -263,6 +261,7 @@ module Shippinglogic
               # <q0:ExportComplianceStatement>NO EEI 30.36</q0:ExportComplianceStatement>
               # </q0:ExportDetail>
               # </q0:CustomsClearanceDetail>
+
               b.CustomsClearanceDetail do
                 b.DutiesPayment do
                   b.PaymentType payment_type if payment_type
@@ -274,7 +273,7 @@ module Shippinglogic
                 b.DocumentContent document_content if document_content
                 b.CustomsValue do
                   b.Currency currency if currency
-                  b.Amount amount if amount
+                  b.Amount item_amount if item_amount
                 end
                 b.Commodities do
                   b.NumberOfPieces number_of_pieces if number_of_pieces
@@ -288,21 +287,30 @@ module Shippinglogic
                   b.QuantityUnits quantity_units if quantity_units
                   b.UnitPrice do
                     b.Currency currency if currency
-                    b.Amount amount if amount
+                    b.Amount item_amount if item_amount
                   end
                   b.CustomsValue do
                     b.Currency currency if currency
-                    b.Amount amount if amount
+                    b.Amount item_amount if item_amount
                   end
                 end
                 b.ExportDetail do
                   b.ExportComplianceStatement export_compliance_statement if export_compliance_statement
                 end
-              end            
+              end
+              
+              b.LabelSpecification do
+                b.LabelFormatType label_format if label_format
+                b.ImageType label_file_type if label_file_type
+                b.LabelStockType label_stock_type if label_stock_type
+              end
+                     
               b.RateRequestTypes rate_request_types.join(",")
               build_package(b)
             end
           end
+          @log.info "shippinglogic xml\n" + xml
+          xml
         end
         
         # Making sense of the reponse and grabbing the information we need.

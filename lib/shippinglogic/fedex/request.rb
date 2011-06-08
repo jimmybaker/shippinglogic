@@ -23,6 +23,12 @@ module Shippinglogic
         # A convenience method for building the authentication block in your XML request
         def build_authentication(b)
           b.WebAuthenticationDetail do
+            # if true # International needs to be passed in
+            #   b.CspCredential do
+            #     b.Key base.key
+            #     b.Password base.password
+            #   end
+            # end
             b.UserCredential do
               b.Key base.key
               b.Password base.password
@@ -32,6 +38,11 @@ module Shippinglogic
           b.ClientDetail do
             b.AccountNumber base.account
             b.MeterNumber base.meter
+          end
+          
+          b.TransactionDetail do
+            b.CustomerTransactionId 'Express International Basic Shipment'
+            # b.CustomerTransactionId 'Express US Basic Shipment'
           end
         end
         
