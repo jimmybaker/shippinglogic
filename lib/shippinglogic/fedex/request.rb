@@ -41,8 +41,7 @@ module Shippinglogic
           end
           
           b.TransactionDetail do
-            b.CustomerTransactionId 'Express International Basic Shipment'
-            # b.CustomerTransactionId 'Express US Basic Shipment'
+            b.CustomerTransactionId 'ProcessShipmentRequest_Condor_US_CA_ADG_IE'
           end
         end
         
@@ -91,8 +90,9 @@ module Shippinglogic
         # A convenience method for building the package block in your XML request
         def build_package(b)
           b.PackageCount package_count
+          b.PackageDetail package_detail
           
-          b.RequestedPackages do
+          b.RequestedPackageLineItems do
             b.SequenceNumber 1
             
             b.Weight do
@@ -106,6 +106,18 @@ module Shippinglogic
                 b.Width package_width
                 b.Height package_height
                 b.Units package_dimension_units
+              end
+            end
+            
+            b.CustomerReferences do
+              b.CustomerReferenceType customer_reference_type
+              b.Value customer_reference_value
+            end
+
+            b.SpecialServicesRequested do
+              b.SpecialServiceTypes DANGEROUS_GOODS
+              b.DangerousGoodsDetail do
+                b.Accessibility ACCESSIBLE
               end
             end
             

@@ -107,7 +107,7 @@ module Shippinglogic
       # The shipment result is an object of this class
       class Shipment; attr_accessor :rate, :currency, :delivery_date, :tracking_number, :label, :barcode; end
       
-      VERSION = {:major => 6, :intermediate => 0, :minor => 0}
+      VERSION = {:major => 9, :intermediate => 0, :minor => 0}
       
       # shipper options
       attribute :shipper_name,                :string
@@ -138,12 +138,13 @@ module Shippinglogic
       # label options
       attribute :label_format,                :string,      :default => "COMMON2D"
       attribute :label_file_type,             :string,      :default => "PDF"
-      attribute :label_stock_type,            :string,      :default => "PAPER_8.5X11_TOP_HALF_LABEL"
+      attribute :label_stock_type,            :string,      :default => "PAPER_7X4.75" #"PAPER_8.5X11_TOP_HALF_LABEL"
       
       # packaging options
       attribute :packaging_type,              :string,      :default => "YOUR_PACKAGING"
-      attribute :packaging_type,              :string,      :default => "YOUR_PACKAGING"
+      attribute :preferred_currency,          :string,      :default => "USD"
       attribute :package_count,               :integer,     :default => 1
+      attribute :package_detail,              :string,      :default => "INDIVIDUAL_PACKAGES"
       attribute :package_weight,              :float
       attribute :package_weight_units,        :string,      :default => "LB"
       attribute :package_length,              :integer
@@ -151,16 +152,24 @@ module Shippinglogic
       attribute :package_height,              :integer
       attribute :package_dimension_units,     :string,      :default => "IN"
       
+      # customer reference
+      attribute :customer_reference_type,     :string,      :default => 'CUSTOMER_REFERENCE'
+      attribute :customer_reference_value,    :string,      :default => 'TC001_01_PT1_ST01_PK01_SNDUS_RCPCA_POS'
+      
+      # special services
+      attribute :special_service_types,       :string,      :default => 'DANGEROUS_GOODS'
+      attribute :accessibility,               :string,      :default => 'ACCESSIBLE'
+
       # monetary options
       attribute :currency_type,               :string
       attribute :insured_value,               :decimal
       attribute :payment_type,                :string,      :default => "SENDER"
       attribute :payor_account_number,        :string,      :default => lambda { |shipment| shipment.base.account }
-      attribute :payor_country,               :string
+      attribute :payor_country_code,          :string,      :default => 'US'
       
       # delivery options
       attribute :ship_time,                   :datetime,    :default => lambda { |shipment| Time.now }
-      attribute :service_type,                :string
+      attribute :service_type,                :string,      :default => "INTERNATIONAL_PRIORITY"
       attribute :dropoff_type,                :string,      :default => "REGULAR_PICKUP"
       attribute :special_services_requested,  :array
       attribute :signature,                   :string
@@ -168,6 +177,9 @@ module Shippinglogic
       # misc options
       attribute :just_validate,               :boolean,     :default => false
       attribute :rate_request_types,          :array,       :default => ["ACCOUNT"]
+      
+      # commercial invoice
+      attribute :terms_of_sale,               :string,      :default => "FOB_OR_FCA"
       
       # customs options
       attribute :payment_type,                :string,      :default => "SENDER"
@@ -191,8 +203,8 @@ module Shippinglogic
         # Just building some XML to send off to FedEx using our various options
         def build_request
           @log = Logger.new('/tmp/fedex.log')
-          @log.info "build_request service_type = #{service_type}"
-
+          @log.info "inside build request"
+          
           b = builder
           xml = b.tag!(just_validate ? "ValidateShipmentRequest" : "ProcessShipmentRequest", :xmlns => "http://fedex.com/ws/ship/v#{VERSION[:major]}") do
             build_authentication(b)
@@ -202,8 +214,8 @@ module Shippinglogic
               b.ShipTimestamp ship_time.xmlschema if ship_time
               b.DropoffType dropoff_type if dropoff_type
               b.ServiceType service_type if service_type
-              # b.ServiceType 'INTERNATIONAL_PRIORITY'
               b.PackagingType packaging_type if packaging_type
+              b.PreferredCurrency preferred_currency if preferred_currency
               build_insured_value(b)
               
               b.Shipper do
@@ -220,47 +232,9 @@ module Shippinglogic
                 b.PaymentType payment_type if payment_type
                 b.Payor do
                   b.AccountNumber payor_account_number if payor_account_number
-                  b.CountryCode payor_country if payor_country
+                  b.CountryCode payor_country_code if payor_country_code
                 end
               end
-              
-              # Per Proprietary_Developer_Guide.pdf from FedEx
-              # <q0:CustomsClearanceDetail>
-              # <q0:DutiesPayment>
-              # <q0:PaymentType>SENDER</q0:PaymentType>
-              # <q0:Payor>
-              # <q0:AccountNumber>123456789</q0:AccountNumber>
-              # <q0:CountryCode>US</q0:CountryCode>
-              # </q0:Payor>
-              # </q0:DutiesPayment>
-              # <q0:DocumentContent>NON_DOCUMENTS</q0:DocumentContent>
-              # <q0:CustomsValue>
-              # <q0:Currency>USD</q0:Currency>
-              # <q0:Amount>100.00</q0:Amount>
-              # </q0:CustomsValue>
-              # <q0:Commodities>
-              # <q0:NumberOfPieces>1</q0:NumberOfPieces>
-              # <q0:Description>Technical Book</q0:Description>
-              # <q0:CountryOfManufacture>US</q0:CountryOfManufacture>
-              # <q0:Weight>
-              # <q0:Units>LB</q0:Units>
-              # <q0:Value>5</q0:Value>
-              # </q0:Weight>
-              # <q0:Quantity>1</q0:Quantity>
-              # <q0:QuantityUnits>EA</q0:QuantityUnits>
-              # <q0:UnitPrice>
-              # <q0:Currency>USD</q0:Currency>
-              # <q0:Amount>100.00</q0:Amount>
-              # </q0:UnitPrice>
-              # <q0:CustomsValue>
-              # <q0:Currency>USD</q0:Currency>
-              # <q0:Amount>100.00</q0:Amount>
-              # </q0:CustomsValue>
-              # </q0:Commodities>
-              # <q0:ExportDetail>
-              # <q0:ExportComplianceStatement>NO EEI 30.36</q0:ExportComplianceStatement>
-              # </q0:ExportDetail>
-              # </q0:CustomsClearanceDetail>
 
               b.CustomsClearanceDetail do
                 b.DutiesPayment do
@@ -274,6 +248,9 @@ module Shippinglogic
                 b.CustomsValue do
                   b.Currency currency if currency
                   b.Amount item_amount if item_amount
+                end
+                b.CommercialInvoice do
+                  b.TermsOfSale terms_of_sale if terms_of_sale
                 end
                 b.Commodities do
                   b.NumberOfPieces number_of_pieces if number_of_pieces
@@ -294,9 +271,9 @@ module Shippinglogic
                     b.Amount item_amount if item_amount
                   end
                 end
-                b.ExportDetail do
-                  b.ExportComplianceStatement export_compliance_statement if export_compliance_statement
-                end
+                # b.ExportDetail do
+                #   b.ExportComplianceStatement export_compliance_statement if export_compliance_statement
+                # end
               end
               
               b.LabelSpecification do
@@ -309,12 +286,13 @@ module Shippinglogic
               build_package(b)
             end
           end
-          @log.info "shippinglogic xml\n" + xml
-          xml
         end
         
         # Making sense of the reponse and grabbing the information we need.
         def parse_response(response)
+          @log = Logger.new('/tmp/fedex.log')
+          @log.info "parse_response = #{parse_response}"
+          
           details = response[:completed_shipment_detail]
           rate_details = details[:shipment_rating][:shipment_rate_details]
           rate = rate_details[:total_net_charge] || rate_details.first[:total_net_charge]
