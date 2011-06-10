@@ -138,11 +138,10 @@ module Shippinglogic
       # label options
       attribute :label_format,                :string,      :default => "COMMON2D"
       attribute :label_file_type,             :string,      :default => "PDF"
-      attribute :label_stock_type,            :string,      :default => "PAPER_7X4.75" #"PAPER_8.5X11_TOP_HALF_LABEL"
+      attribute :label_stock_type,            :string,      :default => "PAPER_7X4.75"
       
       # packaging options
       attribute :packaging_type,              :string,      :default => "YOUR_PACKAGING"
-      attribute :preferred_currency,          :string,      :default => "USD"
       attribute :package_count,               :integer,     :default => 1
       attribute :package_detail,              :string,      :default => "INDIVIDUAL_PACKAGES"
       attribute :package_weight,              :float
@@ -155,17 +154,13 @@ module Shippinglogic
       # customer reference
       attribute :customer_reference_type,     :string,      :default => 'CUSTOMER_REFERENCE'
       attribute :customer_reference_value,    :string,      :default => 'TC001_01_PT1_ST01_PK01_SNDUS_RCPCA_POS'
-      
-      # special services
-      attribute :special_service_types,       :string,      :default => 'DANGEROUS_GOODS'
-      attribute :accessibility,               :string,      :default => 'ACCESSIBLE'
 
       # monetary options
       attribute :currency_type,               :string
       attribute :insured_value,               :decimal
       attribute :payment_type,                :string,      :default => "SENDER"
       attribute :payor_account_number,        :string,      :default => lambda { |shipment| shipment.base.account }
-      attribute :payor_country_code,          :string,      :default => 'US'
+      attribute :payor_country,               :string,      :default => 'US'
       
       # delivery options
       attribute :ship_time,                   :datetime,    :default => lambda { |shipment| Time.now }
@@ -182,15 +177,11 @@ module Shippinglogic
       attribute :terms_of_sale,               :string,      :default => "FOB_OR_FCA"
       
       # customs options
-      attribute :payment_type,                :string,      :default => "SENDER"
       attribute :document_content,            :string,      :default => "NON_DOCUMENTS"
-      attribute :currency,                    :string,      :default => "USD"
       attribute :item_amount,                 :string,      :default => "100.00" # Remove this default
       attribute :number_of_pieces,            :string,      :default => "1"
       attribute :description,                 :string,      :default => "Book"
       attribute :country_of_manufacture,      :string,      :default => "US"
-      attribute :units,                       :string,      :default => "LB"
-      attribute :weight,                      :string,      :default => "1.0" # Remove this default
       attribute :quantity,                    :string,      :default => "1"
       attribute :quantity_units,              :string,      :default => "EA"
       attribute :export_compliance_statement, :string,      :default => "NO EEI 30.36"
@@ -202,8 +193,7 @@ module Shippinglogic
         
         # Just building some XML to send off to FedEx using our various options
         def build_request
-          @log = Logger.new('/tmp/fedex.log')
-          @log.info "inside build request"
+          currency = 'USD'
           
           b = builder
           xml = b.tag!(just_validate ? "ValidateShipmentRequest" : "ProcessShipmentRequest", :xmlns => "http://fedex.com/ws/ship/v#{VERSION[:major]}") do
@@ -215,7 +205,7 @@ module Shippinglogic
               b.DropoffType dropoff_type if dropoff_type
               b.ServiceType service_type if service_type
               b.PackagingType packaging_type if packaging_type
-              b.PreferredCurrency preferred_currency if preferred_currency
+              # b.PreferredCurrency currency if currency
               build_insured_value(b)
               
               b.Shipper do
@@ -232,7 +222,7 @@ module Shippinglogic
                 b.PaymentType payment_type if payment_type
                 b.Payor do
                   b.AccountNumber payor_account_number if payor_account_number
-                  b.CountryCode payor_country_code if payor_country_code
+                  b.CountryCode payor_country if payor_country
                 end
               end
 
@@ -257,8 +247,8 @@ module Shippinglogic
                   b.Description description if description
                   b.CountryOfManufacture country_of_manufacture if country_of_manufacture
                   b.Weight do
-                    b.Units units if units
-                    b.Value weight if weight
+                    b.Units package_weight_units if package_weight_units
+                    b.Value package_weight if package_weight
                   end
                   b.Quantity quantity if quantity
                   b.QuantityUnits quantity_units if quantity_units
@@ -271,9 +261,9 @@ module Shippinglogic
                     b.Amount item_amount if item_amount
                   end
                 end
-                # b.ExportDetail do
-                #   b.ExportComplianceStatement export_compliance_statement if export_compliance_statement
-                # end
+                b.ExportDetail do
+                  b.ExportComplianceStatement export_compliance_statement if export_compliance_statement
+                end
               end
               
               b.LabelSpecification do
@@ -289,10 +279,7 @@ module Shippinglogic
         end
         
         # Making sense of the reponse and grabbing the information we need.
-        def parse_response(response)
-          @log = Logger.new('/tmp/fedex.log')
-          @log.info "parse_response = #{parse_response}"
-          
+        def parse_response(response)          
           details = response[:completed_shipment_detail]
           rate_details = details[:shipment_rating][:shipment_rate_details]
           rate = rate_details[:total_net_charge] || rate_details.first[:total_net_charge]

@@ -115,9 +115,9 @@ module Shippinglogic
             end
 
             b.SpecialServicesRequested do
-              b.SpecialServiceTypes DANGEROUS_GOODS
+              b.SpecialServiceTypes 'DANGEROUS_GOODS'
               b.DangerousGoodsDetail do
-                b.Accessibility ACCESSIBLE
+                b.Accessibility 'ACCESSIBLE'
               end
             end
             
