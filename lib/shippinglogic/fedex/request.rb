@@ -113,13 +113,13 @@ module Shippinglogic
               b.CustomerReferenceType customer_reference_type
               b.Value customer_reference_value
             end
-
-            b.SpecialServicesRequested do
-              b.SpecialServiceTypes 'DANGEROUS_GOODS'
-              b.DangerousGoodsDetail do
-                b.Accessibility 'ACCESSIBLE'
-              end
-            end
+            # 
+            # b.SpecialServicesRequested do
+            #   b.SpecialServiceTypes 'DANGEROUS_GOODS'
+            #   b.DangerousGoodsDetail do
+            #     b.Accessibility 'ACCESSIBLE'
+            #   end
+            # end
             
             if respond_to?(:signature) && signature
               self.special_services_requested << "SIGNATURE_OPTION"
