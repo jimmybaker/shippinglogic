@@ -1,5 +1,4 @@
 require "builder"
-require "logger"
 
 module Shippinglogic
   class FedEx
@@ -8,9 +7,6 @@ module Shippinglogic
       private
         # Convenience method for sending requests to FedEx
         def request(body)
-          log = Logger.new("/tmp/fedex.log")
-          log.info("Request body: ")
-          log.info(body)
           real_class.post(base.url, :body => body)
         end
         

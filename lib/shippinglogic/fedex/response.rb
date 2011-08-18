@@ -1,5 +1,4 @@
 require "shippinglogic/fedex/error"
-require "logger"
 
 module Shippinglogic
   class FedEx
@@ -11,9 +10,6 @@ module Shippinglogic
         # Overwriting the request method to clean the response and handle errors.
         def request(body)
           response = clean_response(super)
-          log = Logger.new("/tmp/fedex.log")
-          log.info("Response: ")
-          log.info(response)
           
           if success?(response)
             response
