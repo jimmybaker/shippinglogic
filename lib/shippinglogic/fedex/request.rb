@@ -110,9 +110,20 @@ module Shippinglogic
             end
             
             b.CustomerReferences do
-              b.CustomerReferenceType customer_reference_type
-              b.Value customer_reference_value
+              b.CustomerReferenceType 'CUSTOMER_REFERENCE'
+              b.Value customer_reference_number
             end
+            
+            b.CustomerReferences do
+              b.CustomerReferenceType 'INVOICE_NUMBER'
+              b.Value invoice_number
+            end
+            
+            b.CustomerReferences do
+              b.CustomerReferenceType 'P_O_NUMBER'
+              b.Value po_number
+            end
+        
             # 
             # b.SpecialServicesRequested do
             #   b.SpecialServiceTypes 'DANGEROUS_GOODS'

@@ -151,9 +151,12 @@ module Shippinglogic
       attribute :package_height,              :integer
       attribute :package_dimension_units,     :string,      :default => "IN"
       
-      # customer reference
-      attribute :customer_reference_type,     :string,      :default => 'CUSTOMER_REFERENCE'
-      attribute :customer_reference_value,    :string,      :default => 'TC001_01_PT1_ST01_PK01_SNDUS_RCPCA_POS'
+      # customer references
+      attribute :invoice_number,              :string,      :default => ''
+      attribute :po_number,                   :string,      :default => ''
+      attribute :customer_reference_number,   :string,      :default => ''
+      attribute :department_number,           :string,      :default => ''
+      attribute :ship_id,                     :string,      :default => ''
 
       # monetary options
       attribute :currency_type,               :string
