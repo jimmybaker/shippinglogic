@@ -264,8 +264,11 @@ module Shippinglogic
                     b.Amount item_amount if item_amount
                   end
                 end
-                b.ExportDetail do
-                  b.ExportComplianceStatement export_compliance_statement if export_compliance_statement
+                
+                unless export_compliance_statement.blank?
+                  b.ExportDetail do
+                    b.ExportComplianceStatement export_compliance_statement if export_compliance_statement
+                  end
                 end
               end
               
@@ -287,7 +290,7 @@ module Shippinglogic
           rate_details = details[:shipment_rating][:shipment_rate_details]
           rate = rate_details[:total_net_charge] || rate_details.first[:total_net_charge]
           package_details = details[:completed_package_details]
-                    
+          
           shipment = Shipment.new
           shipment.rate = BigDecimal.new(rate[:amount])
           shipment.currency = rate[:currency]

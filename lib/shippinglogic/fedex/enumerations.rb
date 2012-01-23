@@ -246,6 +246,7 @@ module Shippinglogic
         "U.A.E." => "AE",
         "U.S. Virgin Islands" => "VI",
         "U.S.A." => "US",
+        "United States" => "US",
         "Uganda" => "UG",
         "Ukraine" => "UA",
         "United Kingdom" => "GB",
