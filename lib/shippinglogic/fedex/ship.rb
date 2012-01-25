@@ -169,7 +169,7 @@ module Shippinglogic
       attribute :ship_time,                   :datetime,    :default => lambda { |shipment| Time.now }
       attribute :service_type,                :string,      :default => "FEDEX_GROUND"
       attribute :dropoff_type,                :string,      :default => "REGULAR_PICKUP"
-      attribute :special_services_requested,  :array
+      attribute :special_services_requested,  :array,       :default => []
       attribute :signature,                   :string
       
       # misc options
@@ -188,6 +188,9 @@ module Shippinglogic
       attribute :quantity,                    :string,      :default => "1"
       attribute :quantity_units,              :string,      :default => "EA"
       attribute :export_compliance_statement, :string,      :default => "NO EEI 30.36"
+      
+      # logging
+      attribute :log,                         :string
       
       private
         def target
@@ -229,46 +232,47 @@ module Shippinglogic
                 end
               end
 
+              # # This is valid but I'm removing it as it's not needed for my project.
               # b.CustomsClearanceDetail do
-              #                 b.DutiesPayment do
-              #                   b.PaymentType payment_type if payment_type
-              #                   b.Payor do
-              #                     b.AccountNumber payor_account_number if payor_account_number
-              #                     b.CountryCode payor_country if payor_country
-              #                   end
-              #                 end
-              #                 b.DocumentContent document_content if document_content
-              #                 b.CustomsValue do
-              #                   b.Currency currency if currency
-              #                   b.Amount item_amount if item_amount
-              #                 end
-              #                 # b.CommercialInvoice do
-              #                 #   b.TermsOfSale terms_of_sale if terms_of_sale
-              #                 # end
-              #                 b.Commodities do
-              #                   b.NumberOfPieces number_of_pieces if number_of_pieces
-              #                   b.Description description if description
-              #                   b.CountryOfManufacture country_of_manufacture if country_of_manufacture
-              #                   b.Weight do
-              #                     b.Units package_weight_units if package_weight_units
-              #                     b.Value package_weight if package_weight
-              #                   end
-              #                   b.Quantity quantity if quantity
-              #                   b.QuantityUnits quantity_units if quantity_units
-              #                   b.UnitPrice do
-              #                     b.Currency currency if currency
-              #                     b.Amount item_amount if item_amount
-              #                   end
-              #                   b.CustomsValue do
-              #                     b.Currency currency if currency
-              #                     b.Amount item_amount if item_amount
-              #                   end
-              #                 end
-              #                 
-              #                 b.ExportDetail do
-              #                   b.ExportComplianceStatement export_compliance_statement if export_compliance_statement
-              #                 end
-              #               end
+              #   b.DutiesPayment do
+              #     b.PaymentType payment_type if payment_type
+              #     b.Payor do
+              #       b.AccountNumber payor_account_number if payor_account_number
+              #       b.CountryCode payor_country if payor_country
+              #     end
+              #   end
+              #   b.DocumentContent document_content if document_content
+              #   b.CustomsValue do
+              #     b.Currency currency if currency
+              #     b.Amount item_amount if item_amount
+              #   end
+              #   # b.CommercialInvoice do
+              #   #   b.TermsOfSale terms_of_sale if terms_of_sale
+              #   # end
+              #   b.Commodities do
+              #     b.NumberOfPieces number_of_pieces if number_of_pieces
+              #     b.Description description if description
+              #     b.CountryOfManufacture country_of_manufacture if country_of_manufacture
+              #     b.Weight do
+              #       b.Units package_weight_units if package_weight_units
+              #       b.Value package_weight if package_weight
+              #     end
+              #     b.Quantity quantity if quantity
+              #     b.QuantityUnits quantity_units if quantity_units
+              #     b.UnitPrice do
+              #       b.Currency currency if currency
+              #       b.Amount item_amount if item_amount
+              #     end
+              #     b.CustomsValue do
+              #       b.Currency currency if currency
+              #       b.Amount item_amount if item_amount
+              #     end
+              #   end
+              #   
+              #   b.ExportDetail do
+              #     b.ExportComplianceStatement export_compliance_statement if export_compliance_statement
+              #   end
+              # end
               
               b.LabelSpecification do
                 b.LabelFormatType label_format if label_format
@@ -286,8 +290,6 @@ module Shippinglogic
         def parse_response(response)      
           details = response[:completed_shipment_detail]
           
-          # Returning the first shipment_rate_details, if more than one are returned.
-          # This will be the PAYOR details
           rate_details = details[:shipment_rating][:shipment_rate_details]
           rate_details = rate_details.kind_of?(Array) ? rate_details.first : rate_details
           
