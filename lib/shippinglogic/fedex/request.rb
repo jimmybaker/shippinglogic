@@ -47,7 +47,7 @@ module Shippinglogic
           end
           
           b.TransactionDetail do
-            b.CustomerTransactionId 'ProcessShipmentRequest_Condor_US_CA_ADG_IE'
+            b.CustomerTransactionId customer_transaction_id
           end
         end
         
@@ -75,7 +75,9 @@ module Shippinglogic
         # A convenience method for building the address block in your XML request
         def build_address(b, type)
           b.Address do
-            b.StreetLines send("#{type}_streets") if send("#{type}_streets")
+            send("#{type}_streets").each do |street|
+              b.StreetLines street
+            end
             b.City send("#{type}_city") if send("#{type}_city")
             b.StateOrProvinceCode state_code(send("#{type}_state")) if send("#{type}_state")
             b.PostalCode send("#{type}_postal_code") if send("#{type}_postal_code")
@@ -138,6 +140,10 @@ module Shippinglogic
             #   end
             # end
             
+            if respond_to?(:dangerous_goods) && dangerous_goods
+              self.special_services_requested << "DANGEROUS_GOODS"
+            end
+            
             if respond_to?(:signature) && signature
               self.special_services_requested << "SIGNATURE_OPTION"
             end
@@ -153,6 +159,36 @@ module Shippinglogic
                     b.OptionType signature
                   end
                 end
+                
+                if dangerous_goods
+                  b.DangerousGoodsDetail do
+                    b.Accessibility 'ACCESSIBLE'
+                    b.CargoAircraftOnly false
+                    b.Options 'HAZARDOUS_MATERIALS'
+                    hazardous_commodities.each do |commodity|
+                      b.HazardousCommodities do
+                        b.Description do
+                           b.Id commodity[:id]
+                           b.PackingGroup commodity[:packing_group]
+                           b.ProperShippingName commodity[:proper_shipping_name]
+                           b.TechnicalName commodity[:technical_name]
+                           b.HazardClass commodity[:hazard_class]
+                           b.SubsidiaryClasses commodity[:subsidiary_classes]
+                           b.LabelText commodity[:label_text]
+                        end
+                        b.Quantity do
+                          b.Amount commodity[:amount]
+                          b.Units commodity[:units]
+                        end
+                        b.Options do
+                          b.LabelTextOption "APPEND"
+                          b.CustomerSuppliedLabelText commodity[:customer_supplied_label_text]
+                        end
+                      end
+                    end
+                  end
+                end
+                
               end
             end
           end

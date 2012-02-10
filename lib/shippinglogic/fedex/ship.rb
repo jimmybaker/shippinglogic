@@ -105,7 +105,7 @@ module Shippinglogic
     #   # => "XXXXXXXXXXXXXX"
     class Ship < Service
       # The shipment result is an object of this class
-      class Shipment; attr_accessor :rate, :currency, :delivery_date, :tracking_number, :label, :barcode; end
+      class Shipment; attr_accessor :rate, :currency, :delivery_date, :tracking_number, :label, :barcode, :tracking_numbers; end
       
       VERSION = {:major => 9, :intermediate => 0, :minor => 0}
       
@@ -115,7 +115,7 @@ module Shippinglogic
       attribute :shipper_company_name,        :string
       attribute :shipper_phone_number,        :string
       attribute :shipper_email,               :string
-      attribute :shipper_streets,             :string
+      attribute :shipper_streets,             :array,       :default => []
       attribute :shipper_city,                :string
       attribute :shipper_state,               :string
       attribute :shipper_postal_code,         :string
@@ -128,7 +128,7 @@ module Shippinglogic
       attribute :recipient_company_name,      :string
       attribute :recipient_phone_number,      :string
       attribute :recipient_email,             :string
-      attribute :recipient_streets,           :string
+      attribute :recipient_streets,           :array,       :default => []
       attribute :recipient_city,              :string
       attribute :recipient_state,             :string
       attribute :recipient_postal_code,       :string
@@ -171,10 +171,16 @@ module Shippinglogic
       attribute :dropoff_type,                :string,      :default => "REGULAR_PICKUP"
       attribute :special_services_requested,  :array,       :default => []
       attribute :signature,                   :string
+      attribute :dangerous_goods,             :boolean,     :default => false
+      attribute :dangerous_goods_accessibility, :string,    :default => 'INACCESSIBLE'
+      attribute :dangerous_goods_cargo_aircraft_only, :boolean, :default => false
+      attribute :dangerous_goods_options,     :string,      :default => 'HAZARDOUS_MATERIALS'
+      attribute :hazardous_commodities,       :array,       :default => []
       
       # misc options
       attribute :just_validate,               :boolean,     :default => false
       attribute :rate_request_types,          :array,       :default => ["ACCOUNT"]
+      attribute :customer_transaction_id,     :string,      :default => 'Test_transaction_id'
       
       # commercial invoice
       attribute :terms_of_sale,               :string,      :default => "FOB_OR_FCA"
@@ -188,6 +194,11 @@ module Shippinglogic
       attribute :quantity,                    :string,      :default => "1"
       attribute :quantity_units,              :string,      :default => "EA"
       attribute :export_compliance_statement, :string,      :default => "NO EEI 30.36"
+      
+      # smart post attributes
+      attribute :indicia,                     :string,      :default => 'PARCEL_SELECT'
+      attribute :ancillary_endorsement,       :string,      :default => 'CARRIER_LEAVE_IF_NO_RESPONSE'
+      attribute :hub_id,                      :string,      :default => '5531'
       
       # logging
       attribute :log,                         :string
@@ -231,48 +242,57 @@ module Shippinglogic
                   b.CountryCode payor_country if payor_country
                 end
               end
+              
+              if service_type == 'SMART_POST'
+                b.SmartPostDetail do
+                  b.Indicia indicia
+                  b.AncillaryEndorsement ancillary_endorsement
+                  b.HubId hub_id
+                end
+              end
 
               # # This is valid but I'm removing it as it's not needed for my project.
-              # b.CustomsClearanceDetail do
-              #   b.DutiesPayment do
-              #     b.PaymentType payment_type if payment_type
-              #     b.Payor do
-              #       b.AccountNumber payor_account_number if payor_account_number
-              #       b.CountryCode payor_country if payor_country
-              #     end
-              #   end
-              #   b.DocumentContent document_content if document_content
-              #   b.CustomsValue do
-              #     b.Currency currency if currency
-              #     b.Amount item_amount if item_amount
-              #   end
-              #   # b.CommercialInvoice do
-              #   #   b.TermsOfSale terms_of_sale if terms_of_sale
-              #   # end
-              #   b.Commodities do
-              #     b.NumberOfPieces number_of_pieces if number_of_pieces
-              #     b.Description description if description
-              #     b.CountryOfManufacture country_of_manufacture if country_of_manufacture
-              #     b.Weight do
-              #       b.Units package_weight_units if package_weight_units
-              #       b.Value package_weight if package_weight
-              #     end
-              #     b.Quantity quantity if quantity
-              #     b.QuantityUnits quantity_units if quantity_units
-              #     b.UnitPrice do
-              #       b.Currency currency if currency
-              #       b.Amount item_amount if item_amount
-              #     end
-              #     b.CustomsValue do
-              #       b.Currency currency if currency
-              #       b.Amount item_amount if item_amount
-              #     end
-              #   end
-              #   
-              #   b.ExportDetail do
-              #     b.ExportComplianceStatement export_compliance_statement if export_compliance_statement
-              #   end
-              # end
+              if FedEx::Enumerations::INTERNATIONAL_SERVICE_TYPES.include?(service_type)
+              b.CustomsClearanceDetail do
+                b.DutiesPayment do
+                  b.PaymentType payment_type if payment_type
+                  b.Payor do
+                    b.AccountNumber payor_account_number if payor_account_number
+                    b.CountryCode payor_country if payor_country
+                  end
+                end
+                b.DocumentContent document_content if document_content
+                b.CustomsValue do
+                  b.Currency currency if currency
+                  b.Amount item_amount if item_amount
+                end
+                # b.CommercialInvoice do
+                #   b.TermsOfSale terms_of_sale if terms_of_sale
+                # end
+                b.Commodities do
+                  b.NumberOfPieces number_of_pieces if number_of_pieces
+                  b.Description description if description
+                  b.CountryOfManufacture country_of_manufacture if country_of_manufacture
+                  b.Weight do
+                    b.Units package_weight_units if package_weight_units
+                    b.Value package_weight if package_weight
+                  end
+                  b.Quantity quantity if quantity
+                  b.QuantityUnits quantity_units if quantity_units
+                  b.UnitPrice do
+                    b.Currency currency if currency
+                    b.Amount item_amount if item_amount
+                  end
+                  b.CustomsValue do
+                    b.Currency currency if currency
+                    b.Amount item_amount if item_amount
+                  end
+                end
+                
+                b.ExportDetail do
+                  b.ExportComplianceStatement export_compliance_statement if export_compliance_statement
+                end
+              end
               
               b.LabelSpecification do
                 b.LabelFormatType label_format if label_format
@@ -300,10 +320,22 @@ module Shippinglogic
           shipment.rate = BigDecimal.new(rate[:amount])
           shipment.currency = rate[:currency]
           shipment.delivery_date = Date.parse(details[:routing_detail][:delivery_date]) if details[:routing_detail][:delivery_date]
+          shipment.tracking_numbers = {}
           
-          shipment.tracking_number = package_details[:tracking_ids][:tracking_number]
+          if package_details[:tracking_ids].kind_of?(Array)
+            shipment.tracking_number = package_details[:tracking_ids].first[:tracking_number]
+            package_details[:tracking_ids].each do |trk|
+              shipment.tracking_numbers[trk[:tracking_id_type]] = trk[:tracking_number]
+            end
+          else
+            shipment.tracking_number = package_details[:tracking_ids][:tracking_number]
+          end
           shipment.label = package_details[:label][:parts][:image] && Base64.decode64(package_details[:label][:parts][:image])
-          shipment.barcode = package_details[:barcodes][:binary_barcodes][:value] && Base64.decode64(package_details[:barcodes][:binary_barcodes][:value])
+          
+          unless package_details[:barcodes][:binary_barcodes].nil?
+            shipment.barcode = package_details[:barcodes][:binary_barcodes][:value] && Base64.decode64(package_details[:barcodes][:binary_barcodes][:value])
+          end
+          
           shipment
         end
     end
