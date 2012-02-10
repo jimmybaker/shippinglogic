@@ -253,44 +253,45 @@ module Shippinglogic
 
               # # This is valid but I'm removing it as it's not needed for my project.
               if FedEx::Enumerations::INTERNATIONAL_SERVICE_TYPES.include?(service_type)
-              b.CustomsClearanceDetail do
-                b.DutiesPayment do
-                  b.PaymentType payment_type if payment_type
-                  b.Payor do
-                    b.AccountNumber payor_account_number if payor_account_number
-                    b.CountryCode payor_country if payor_country
+                b.CustomsClearanceDetail do
+                  b.DutiesPayment do
+                    b.PaymentType payment_type if payment_type
+                    b.Payor do
+                      b.AccountNumber payor_account_number if payor_account_number
+                      b.CountryCode payor_country if payor_country
+                    end
                   end
-                end
-                b.DocumentContent document_content if document_content
-                b.CustomsValue do
-                  b.Currency currency if currency
-                  b.Amount item_amount if item_amount
-                end
-                # b.CommercialInvoice do
-                #   b.TermsOfSale terms_of_sale if terms_of_sale
-                # end
-                b.Commodities do
-                  b.NumberOfPieces number_of_pieces if number_of_pieces
-                  b.Description description if description
-                  b.CountryOfManufacture country_of_manufacture if country_of_manufacture
-                  b.Weight do
-                    b.Units package_weight_units if package_weight_units
-                    b.Value package_weight if package_weight
-                  end
-                  b.Quantity quantity if quantity
-                  b.QuantityUnits quantity_units if quantity_units
-                  b.UnitPrice do
-                    b.Currency currency if currency
-                    b.Amount item_amount if item_amount
-                  end
+                  b.DocumentContent document_content if document_content
                   b.CustomsValue do
                     b.Currency currency if currency
                     b.Amount item_amount if item_amount
                   end
-                end
+                  # b.CommercialInvoice do
+                  #   b.TermsOfSale terms_of_sale if terms_of_sale
+                  # end
+                  b.Commodities do
+                    b.NumberOfPieces number_of_pieces if number_of_pieces
+                    b.Description description if description
+                    b.CountryOfManufacture country_of_manufacture if country_of_manufacture
+                    b.Weight do
+                      b.Units package_weight_units if package_weight_units
+                      b.Value package_weight if package_weight
+                    end
+                    b.Quantity quantity if quantity
+                    b.QuantityUnits quantity_units if quantity_units
+                    b.UnitPrice do
+                      b.Currency currency if currency
+                      b.Amount item_amount if item_amount
+                    end
+                    b.CustomsValue do
+                      b.Currency currency if currency
+                      b.Amount item_amount if item_amount
+                    end
+                  end
                 
-                b.ExportDetail do
-                  b.ExportComplianceStatement export_compliance_statement if export_compliance_statement
+                  b.ExportDetail do
+                    b.ExportComplianceStatement export_compliance_statement if export_compliance_statement
+                  end
                 end
               end
               
