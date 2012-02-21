@@ -310,16 +310,19 @@ module Shippinglogic
         # Making sense of the reponse and grabbing the information we need.
         def parse_response(response)      
           details = response[:completed_shipment_detail]
-          
-          rate_details = details[:shipment_rating][:shipment_rate_details]
-          rate_details = rate_details.kind_of?(Array) ? rate_details.first : rate_details
-          
-          rate = rate_details[:total_net_charge] || rate_details.first[:total_net_charge]
-          package_details = details[:completed_package_details]
-          
           shipment = Shipment.new
-          shipment.rate = BigDecimal.new(rate[:amount])
-          shipment.currency = rate[:currency]
+          
+          # In case a label is returned without rates
+          if details.has_key?(:shipment_rating)
+            rate_details = details[:shipment_rating][:shipment_rate_details]
+            rate_details = rate_details.kind_of?(Array) ? rate_details.first : rate_details
+          
+            rate = rate_details[:total_net_charge] || rate_details.first[:total_net_charge]
+            shipment.rate = BigDecimal.new(rate[:amount])
+            shipment.currency = rate[:currency]
+          end
+          
+          package_details = details[:completed_package_details]
           shipment.delivery_date = Date.parse(details[:routing_detail][:delivery_date]) if details[:routing_detail][:delivery_date]
           shipment.tracking_numbers = {}
           
