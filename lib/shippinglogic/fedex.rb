@@ -6,6 +6,7 @@ require "shippinglogic/fedex/ship"
 require "shippinglogic/fedex/signature"
 require "shippinglogic/fedex/track"
 require "shippinglogic/fedex/address"
+require "shippinglogic/fedex/pickup"
 
 module Shippinglogic
   class FedEx
@@ -85,5 +86,9 @@ module Shippinglogic
 		def address(attributes = {})
 		  @address ||= Address.new(self, attributes)
 		end
+
+    def pickup(attributes = {})
+      @pickup ||= Pickup.new(self, attributes)
+    end
   end
 end
