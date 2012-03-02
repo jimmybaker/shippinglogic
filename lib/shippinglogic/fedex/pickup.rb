@@ -3,7 +3,7 @@ module Shippinglogic
   class FedEx
 
     class Pickup < Service
-      class ScheduledPickup; attr_accessor :customer_transaction_id, :confirmation_number; end
+      class ScheduledPickup; attr_accessor :customer_transaction_id, :confirmation_number, :location; end
       VERSION = {:major => 3, :intermediate => 0, :minor => 0}
 
       # pickup options
@@ -86,6 +86,7 @@ module Shippinglogic
         sp = ScheduledPickup.new
         sp.customer_transaction_id = response[:transaction_detail][:customer_transaction_id]
         sp.confirmation_number = response[:pickup_confirmation_number]
+        sp.location = response[:location]
         sp
       end
 

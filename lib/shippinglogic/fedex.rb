@@ -7,6 +7,7 @@ require "shippinglogic/fedex/signature"
 require "shippinglogic/fedex/track"
 require "shippinglogic/fedex/address"
 require "shippinglogic/fedex/pickup"
+require "shippinglogic/fedex/cancel_pickup"
 
 module Shippinglogic
   class FedEx
@@ -89,6 +90,10 @@ module Shippinglogic
 
     def pickup(attributes = {})
       @pickup ||= Pickup.new(self, attributes)
+    end
+
+    def cancel_pickup(attributes = {})
+      @pickup ||= CancelPickup.new(self, attributes)
     end
   end
 end
