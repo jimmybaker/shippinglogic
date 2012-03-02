@@ -26,7 +26,7 @@ module Shippinglogic
           b.CarrierCode carrier_code
           b.PickupConfirmationNumber confirmation_number
           b.ScheduledDate scheduled_date
-          unless location.length == 0
+          if location && location.length > 0
             b.Location location
           end
           b.Remarks remarks
