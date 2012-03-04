@@ -3,6 +3,7 @@ module Shippinglogic
   class FedEx
 
     class CancelPickup < Service
+      class CancelledPickup; end
       VERSION = {:major => 3, :intermediate => 0, :minor => 0}
 
       attribute :customer_transaction_id,     :string,      :default => 'Taigan_Pickup_Cancellation'
@@ -34,7 +35,8 @@ module Shippinglogic
       end
 
       def parse_response(response)
-        return true
+        cp = CancelledPickup.new
+        cp
       end
     end
   end
