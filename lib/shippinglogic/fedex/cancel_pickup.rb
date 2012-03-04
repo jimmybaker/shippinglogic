@@ -20,6 +20,7 @@ module Shippinglogic
       end
 
       def build_request
+        puts "==================HIT BUILD REQUEST====================="
         b = builder
         xml = b.tag!("CancelPickupRequest", :xmlns => "http://fedex.com/ws/pickup/v#{VERSION[:major]}") do
           build_authentication(b)
