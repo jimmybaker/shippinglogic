@@ -3,7 +3,6 @@ module Shippinglogic
   class FedEx
 
     class CancelPickup < Service
-      class CancelledPickup; end
       VERSION = {:major => 3, :intermediate => 0, :minor => 0}
 
       attribute :customer_transaction_id,     :string,      :default => 'Taigan_Pickup_Cancellation'
@@ -14,13 +13,16 @@ module Shippinglogic
       attribute :remarks,                     :string
       attribute :log,                         :string
 
+      def perform
+        target && true
+      end
+
       private
       def target
-        @target ||= parse_response(request(build_request))
+        @target ||= request(build_request)
       end
 
       def build_request
-        puts "==================HIT BUILD REQUEST====================="
         b = builder
         xml = b.tag!("CancelPickupRequest", :xmlns => "http://fedex.com/ws/pickup/v#{VERSION[:major]}") do
           build_authentication(b)
@@ -33,11 +35,6 @@ module Shippinglogic
           end
           b.Remarks remarks
         end
-      end
-
-      def parse_response(response)
-        cp = CancelledPickup.new
-        cp
       end
     end
   end

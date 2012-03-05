@@ -93,7 +93,7 @@ module Shippinglogic
     end
 
     def cancel_pickup(attributes = {})
-      @pickup ||= CancelPickup.new(self, attributes)
+      @cancel_pickup ||= CancelPickup.new(self, attributes)
     end
   end
 end

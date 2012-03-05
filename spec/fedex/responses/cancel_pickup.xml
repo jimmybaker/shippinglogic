@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?> 
+<v3:CancelPickupReply xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/' xmlns:v3='http://fedex.com/ws/pickup/v3'>
+  <v3:HighestSeverity xmlns:env='http://schemas.xmlsoap.org/soap/envelope/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+    SUCCESS
+  </v3:HighestSeverity>
+  <v3:Notifications xmlns:env='http://schemas.xmlsoap.org/soap/envelope/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+    <v3:Severity>
+      SUCCESS
+    </v3:Severity>
+    <v3:Source>
+      disp
+    </v3:Source>
+    <v3:Code>
+      0000
+    </v3:Code>
+    <v3:Message>
+      Success
+    </v3:Message>
+    <v3:LocalizedMessage>
+      Success
+    </v3:LocalizedMessage>
+  </v3:Notifications>
+  <v3:TransactionDetail>
+    <v3:CustomerTransactionId>
+      Taigan_Pickup_Cancellation
+    </v3:CustomerTransactionId>
+  </v3:TransactionDetail>
+  <v3:Version>
+    <v3:ServiceId>
+      disp
+    </v3:ServiceId>
+    <v3:Major>
+      3
+    </v3:Major>
+    <v3:Intermediate>
+      0
+    </v3:Intermediate>
+    <v3:Minor>
+      0
+    </v3:Minor>
+  </v3:Version>
+</v3:CancelPickupReply>
